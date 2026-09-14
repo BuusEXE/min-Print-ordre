@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Min print ordre</title>
+
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --text: #17202a;
+      --muted: #6b7280;
+      --primary: #5b4df5;
+      --primary-dark: #4639d2;
+      --border: #e5e7eb;
+      --danger: #dc2626;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
+      .small-status-select {
+  width: auto;
+  min-width: 145px;
+  padding: 7px 9px;
+  font-size: 0.8rem;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  background: white;
+  color: var(--text);
+}
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background-image:
+    linear-gradient(rgba(244, 246, 248, 0.82), rgba(244, 246, 248, 0.82)),
+    url("billede.jpg");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  color: var(--text);
+}
+
+    header {
+      background: #15132d;
+      color: white;
+      padding: 20px 28px;
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 800;
+    }
+
+    .logo span {
+      color: #a59cff;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 30px 20px 60px;
+    }
+
+    .page-title {
+      margin-bottom: 24px;
+    }
+
+    .page-title h1 {
+      font-size: 2rem;
+      margin-bottom: 6px;
+    }
+
+    .page-title p {
+      color: var(--muted);
+    }
+
+    button {
+      border: 0;
+      border-radius: 9px;
+      padding: 11px 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .primary-button {
+      background: var(--primary);
+      color: white;
+    }
+
+    .primary-button:hover {
+      background: var(--primary-dark);
+    }
+
+    .secondary-button {
+      background: #eef0ff;
+      color: var(--primary-dark);
+    }
+
+    .danger-button {
+      background: #fee2e2;
+      color: var(--danger);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      padding: 22px;
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .stat-card p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+
+    .stat-card strong {
+      font-size: 1.8rem;
+    }
+
+    .toolbar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex: 1;
+      flex-wrap: wrap;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 11px 12px;
+      font: inherit;
+      background: white;
+    }
+
+    .filters input {
+      max-width: 330px;
+    }
+
+    .filters select {
+      max-width: 220px;
+    }
+
+    .orders-wrapper {
+      background: var(--card);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow-x: auto;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 900px;
+    }
+
+    th,
+    td {
+      padding: 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      background: #fafafa;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .order-number {
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .status-ny {
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+
+    .status-til-tilbud {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-godkendt {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .status-under-print {
+      background: #ede9fe;
+      color: #6d28d9;
+    }
+
+    .status-efterbehandling {
+      background: #fce7f3;
+      color: #9d174d;
+    }
+
+    .status-klar {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .status-afsluttet {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .actions {
+      display: flex;
+      gap: 7px;
+    }
+
+    .small-button {
+      padding: 7px 10px;
+      font-size: 0.8rem;
+    }
+
+    .empty-state {
+      padding: 50px 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      z-index: 10;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .modal {
+      background: white;
+      width: 100%;
+      max-width: 700px;
+      border-radius: 16px;
+      padding: 26px;
+      margin-top: 30px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+
+    .close-button {
+      background: transparent;
+      font-size: 1.5rem;
+      padding: 4px 8px;
+      color: var(--muted);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-weight: 650;
+      font-size: 0.9rem;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 850px) {
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .header-content {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-group.full {
+        grid-column: auto;
+      }
+
+      .container {
+        padding: 22px 12px 40px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="header-content">
+      <div class="logo">Print<span>Ordre 1,0</span></div>
+      <button class="primary-button" onclick="openOrderModal()">
+        + Ny ordre
+      </button>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="page-title">
+      <h1>Ordreoversigt</h1>
+      <p>Hold styr på dine 3D-print fra første forespørgsel til levering.</p>
+    </div>
+
+    <section class="stats">
+      <div class="stat-card">
+        <p>Alle ordrer</p>
+        <strong id="totalOrders">0</strong>
+      </div>
+
+      <div class="stat-card">
+        <p>Aktive ordrer</p>
+        <strong id="activeOrders">0</strong>
+      </div>
+
+      <div class="stat-card">
+        <p>Klar til levering</p>
+        <strong id="readyOrders">0</strong>
+      </div>
+
+      <div class="stat-card">
+        <p>Samlet værdi</p>
+        <strong id="totalRevenue">0 kr.</strong>
+      </div>
+    </section>
+
+    <section class="toolbar">
+      <div class="filters">
+        <input
+          id="searchInput"
+          type="search"
+          placeholder="Søg efter ordre, kunde eller produkt..."
+          oninput="renderOrders()"
+        />
+
+        <select id="statusFilter" onchange="renderOrders()">
+          <option value="">Alle statusser</option>
+          <option value="Ny">Ny</option>
+          <option value="Til tilbud">Til tilbud</option>
+          <option value="Godkendt">Godkendt</option>
+          <option value="Under print">Under print</option>
+          <option value="Efterbehandling">Efterbehandling</option>
+          <option value="Klar">Klar</option>
+          <option value="Afsluttet">Afsluttet</option>
+        </select>
+      </div>
+
+      <button class="secondary-button" onclick="clearFilters()">
+        Ryd filtre
+      </button>
+    </section>
+
+    <section class="orders-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Ordre</th>
+            <th>Kunde</th>
+            <th>Produkt</th>
+            <th>Status</th>
+            <th>Deadline</th>
+<th>Oprettet</th>
+<th>Pris</th>
+            <th>Handlinger</th>
+          </tr>
+        </thead>
+        <tbody id="ordersTable"></tbody>
+      </table>
+
+      <div id="emptyState" class="empty-state" style="display: none;">
+        Ingen ordrer matcher din søgning.
+      </div>
+    </section>
+  </main>
+
+  <div id="modalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Ny ordre</h2>
+        <button class="close-button" onclick="closeOrderModal()">×</button>
+      </div>
+
+      <form id="orderForm">
+        <input type="hidden" id="orderId" />
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="customer">Kunde</label>
+            <input id="customer" required placeholder="F.eks. Mads Jensen" />
+          </div>
+
+          <div class="form-group">
+            <label for="product">Produkt</label>
+            <input id="product" required placeholder="F.eks. Telefonholder" />
+          </div>
+
+          <div class="form-group">
+            <label for="email">E-mail</label>
+            <input id="email" type="email" placeholder="kunde@email.dk" />
+          </div>
+
+          <div class="form-group">
+            <label for="deadline">Deadline</label>
+            <input id="deadline" type="date" />
+          </div>
+          <div class="form-group">
+  <label for="createdDate">Oprettet</label>
+  <input id="createdDate" type="date" readonly />
+</div>
+
+          <div class="form-group">
+            <label for="material">Materiale</label>
+            <select id="material">
+              <option value="PLA">PLA</option>
+              <option value="PETG">PETG</option>
+              <option value="ABS">ABS</option>
+              <option value="TPU">TPU</option>
+              <option value="Resin">Resin</option>
+              <option value="Andet">Andet</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="weight">Materialeforbrug i gram</label>
+            <input id="weight" type="number" min="0" placeholder="F.eks. 85" />
+          </div>
+
+          <div class="form-group">
+            <label for="printTime">Printtid i timer</label>
+            <input id="printTime" type="number" min="0" step="0.1" placeholder="F.eks. 6.5" />
+          </div>
+
+          <div class="form-group">
+            <label for="price">Pris i kroner</label>
+            <input id="price" type="number" min="0" step="0.01" required placeholder="F.eks. 175" />
+          </div>
+
+          <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status">
+              <option value="Ny">Ny</option>
+              <option value="Til tilbud">Til tilbud</option>
+              <option value="Godkendt">Godkendt</option>
+              <option value="Under print">Under print</option>
+              <option value="Efterbehandling">Efterbehandling</option>
+              <option value="Klar">Klar</option>
+              <option value="Afsluttet">Afsluttet</option>
+            </select>
+          </div>
+
+          <div class="form-group full">
+            <label for="notes">Noter</label>
+            <textarea id="notes" rows="4" placeholder="Farve, særlige ønsker, leveringsoplysninger..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="secondary-button" onclick="closeOrderModal()">
+            Annuller
+          </button>
+          <button type="submit" class="primary-button">
+            Gem ordre
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "printfFlowOrders";
+
+    const defaultOrders = [
+      {
+        id: 1001,
+        customer: "Mads Jensen",
+        product: "Telefonholder",
+        email: "mads@example.com",
+        deadline: "2026-09-20",
+        material: "PLA",
+        weight: 85,
+        printTime: 4.5,
+        price: 175,
+        status: "Under print",
+        notes: "Sort farve"
+      },
+      {
+        id: 1002,
+        customer: "Sara Nielsen",
+        product: "Reservedel",
+        email: "sara@example.com",
+        deadline: "2026-09-22",
+        material: "PETG",
+        weight: 42,
+        printTime: 2.2,
+        price: 90,
+        status: "Ny",
+        notes: "Skal passe til original reservedel"
+      }
+    ];
+
+    let orders = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultOrders;
+
+    const statusClasses = {
+      "Ny": "status-ny",
+      "Til tilbud": "status-til-tilbud",
+      "Godkendt": "status-godkendt",
+      "Under print": "status-under-print",
+      "Efterbehandling": "status-efterbehandling",
+      "Klar": "status-klar",
+      "Afsluttet": "status-afsluttet"
+    };
+
+    function saveOrders() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+    }
+
+    function formatCurrency(value) {
+      return Number(value || 0).toLocaleString("da-DK", {
+        style: "currency",
+        currency: "DKK",
+        maximumFractionDigits: 2
+      });
+    }
+
+    function formatDate(date) {
+      if (!date) return "—";
+
+      return new Date(date + "T00:00:00").toLocaleDateString("da-DK", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      });
+    }
+
+    function renderOrders() {
+  const table = document.getElementById("ordersTable");
+
+  // Tidligste deadline øverst
+  const sortedOrders = [...orders].sort((a, b) => {
+    // Ordrer uden deadline placeres nederst
+    if (!a.deadline && !b.deadline) return 0;
+    if (!a.deadline) return 1;
+    if (!b.deadline) return -1;
+
+    return new Date(a.deadline) - new Date(b.deadline);
+  });
+
+  const emptyState = document.getElementById("emptyState");
+  const search = document.getElementById("searchInput").value.toLowerCase();
+  const selectedStatus = document.getElementById("statusFilter").value;
+
+  const filteredOrders = sortedOrders.filter(order => {
+    const matchesSearch =
+      order.customer.toLowerCase().includes(search) ||
+      order.product.toLowerCase().includes(search) ||
+      String(order.id).includes(search);
+
+    const matchesStatus =
+      !selectedStatus || order.status === selectedStatus;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  table.innerHTML = "";
+
+  filteredOrders.forEach(order => {
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td class="order-number">#${order.id}</td>
+      <td>${escapeHtml(order.customer)}</td>
+      <td>${escapeHtml(order.product)}</td>
+      <td>
+        <span class="status ${statusClasses[order.status]}">
+          ${escapeHtml(order.status)}
+        </span>
+      </td>
+      <td>${formatDate(order.deadline)}</td>
+<td>${formatDate(order.createdDate)}</td>
+<td>${formatCurrency(order.price)}</td>
+      <td>
+        <div class="actions">
+          <button
+            class="secondary-button small-button"
+            onclick="editOrder(${order.id})">
+            Rediger
+          </button>
+
+          <select
+            class="small-status-select"
+            onchange="changeStatus(${order.id}, this.value)"
+            aria-label="Skift status">
+            ${getStatusOptions(order.status)}
+          </select>
+
+          <button
+            class="danger-button small-button"
+            onclick="deleteOrder(${order.id})">
+            Slet
+          </button>
+        </div>
+      </td>
+    `;
+
+    table.appendChild(row);
+  });
+
+  emptyState.style.display = filteredOrders.length ? "none" : "block";
+  updateStats();
+}
+
+    function updateStats() {
+      const activeStatuses = [
+        "Ny",
+        "Til tilbud",
+        "Godkendt",
+        "Under print",
+        "Efterbehandling"
+      ];
+
+      const activeOrders = orders.filter(order =>
+        activeStatuses.includes(order.status)
+      ).length;
+
+      const readyOrders = orders.filter(order =>
+        order.status === "Klar"
+      ).length;
+
+      const totalRevenue = orders.reduce(
+        (sum, order) => sum + Number(order.price || 0),
+        0
+      );
+
+      document.getElementById("totalOrders").textContent = orders.length;
+      document.getElementById("activeOrders").textContent = activeOrders;
+      document.getElementById("readyOrders").textContent = readyOrders;
+      document.getElementById("totalRevenue").textContent =
+        formatCurrency(totalRevenue);
+    }
+
+    function openOrderModal(order = null) {
+      document.getElementById("modalBackdrop").classList.add("active");
+      document.getElementById("modalTitle").textContent =
+        order ? "Rediger ordre" : "Ny ordre";
+
+      document.getElementById("orderForm").reset();
+      document.getElementById("createdDate").value =
+  order ? order.createdDate || getTodayAsInputDate() : getTodayAsInputDate();
+      document.getElementById("orderId").value = order ? order.id : "";
+
+      if (order) {
+        document.getElementById("customer").value = order.customer;
+        document.getElementById("product").value = order.product;
+        document.getElementById("email").value = order.email || "";
+        document.getElementById("deadline").value = order.deadline || "";
+        document.getElementById("material").value = order.material || "PLA";
+        document.getElementById("weight").value = order.weight || "";
+        document.getElementById("printTime").value = order.printTime || "";
+        document.getElementById("price").value = order.price || "";
+        document.getElementById("status").value = order.status || "Ny";
+        document.getElementById("notes").value = order.notes || "";
+      } else {
+        document.getElementById("status").value = "Ny";
+      }
+    }
+
+    function closeOrderModal() {
+      document.getElementById("modalBackdrop").classList.remove("active");
+    }
+
+    function editOrder(id) {
+      const order = orders.find(order => order.id === id);
+
+      if (order) {
+        openOrderModal(order);
+      }
+    }
+    function getStatusOptions(currentStatus) {
+  const statuses = [
+    "Ny",
+    "Til tilbud",
+    "Godkendt",
+    "Under print",
+    "Efterbehandling",
+    "Klar",
+    "Afsluttet"
+  ];
+
+  return statuses.map(status => `
+    <option value="${status}" ${status === currentStatus ? "selected" : ""}>
+      ${status}
+    </option>
+  `).join("");
+}
+
+function changeStatus(orderId, newStatus) {
+  orders = orders.map(order => {
+    if (order.id === orderId) {
+      return {
+        ...order,
+        status: newStatus
+      };
+    }
+
+    return order;
+  });
+
+  saveOrders();
+  renderOrders();
+}
+
+    function deleteOrder(id) {
+      const order = orders.find(order => order.id === id);
+
+      if (!order) return;
+
+      const confirmed = confirm(
+        `Vil du slette ordre #${id} for ${order.customer}?`
+      );
+
+      if (confirmed) {
+        orders = orders.filter(order => order.id !== id);
+        saveOrders();
+        renderOrders();
+      }
+    }
+
+    function clearFilters() {
+      document.getElementById("searchInput").value = "";
+      document.getElementById("statusFilter").value = "";
+      renderOrders();
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function getTodayAsInputDate() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+    document.getElementById("orderForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      const existingId = document.getElementById("orderId").value;
+
+      const orderData = {
+  id: existingId
+    ? Number(existingId)
+    : orders.length
+      ? Math.max(...orders.map(order => order.id)) + 1
+      : 1001,
+
+  createdDate: document.getElementById("createdDate").value,
+
+  customer: document.getElementById("customer").value.trim(),
+        product: document.getElementById("product").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        deadline: document.getElementById("deadline").value,
+        material: document.getElementById("material").value,
+        weight: Number(document.getElementById("weight").value || 0),
+        printTime: Number(document.getElementById("printTime").value || 0),
+        price: Number(document.getElementById("price").value || 0),
+        status: document.getElementById("status").value,
+        notes: document.getElementById("notes").value.trim()
+      };
+
+      if (existingId) {
+        orders = orders.map(order =>
+          order.id === Number(existingId) ? orderData : order
+        );
+      } else {
+        orders.unshift(orderData);
+      }
+
+      saveOrders();
+      renderOrders();
+      closeOrderModal();
+    });
+
+    document.getElementById("modalBackdrop").addEventListener("click", function(event) {
+      if (event.target === this) {
+        closeOrderModal();
+      }
+    });
+
+    renderOrders();
+  </script>
+</body>
+</html>

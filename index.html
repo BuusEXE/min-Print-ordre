@@ -567,34 +567,7 @@
   <script>
     const STORAGE_KEY = "printfFlowOrders";
 
-    const defaultOrders = [
-      {
-        id: 1001,
-        customer: "Mads Jensen",
-        product: "Telefonholder",
-        email: "mads@example.com",
-        deadline: "2026-09-20",
-        material: "PLA",
-        weight: 85,
-        printTime: 4.5,
-        price: 175,
-        status: "Under print",
-        notes: "Sort farve"
-      },
-      {
-        id: 1002,
-        customer: "Sara Nielsen",
-        product: "Reservedel",
-        email: "sara@example.com",
-        deadline: "2026-09-22",
-        material: "PETG",
-        weight: 42,
-        printTime: 2.2,
-        price: 90,
-        status: "Ny",
-        notes: "Skal passe til original reservedel"
-      }
-    ];
+    const defaultOrders = [];
 
     let orders = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultOrders;
 

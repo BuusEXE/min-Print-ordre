@@ -381,13 +381,106 @@
         padding: 22px 12px 40px;
       }
     }
+    .update-log {
+  max-width: 1400px;
+  margin: 30px auto 0;
+  padding: 22px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+.positive-profit {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.negative-profit {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.update-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.update-log-header h2 {
+  margin-bottom: 5px;
+}
+
+.update-log-header p {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.update-input-area {
+  margin-bottom: 18px;
+}
+
+.update-input-area textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.update-notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.update-note {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 14px;
+  background: #f8f9ff;
+  border-left: 4px solid var(--primary);
+  border-radius: 8px;
+}
+
+.update-note-content {
+  flex: 1;
+}
+
+.update-note-date {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-bottom: 5px;
+}
+
+.update-note-text {
+  white-space: pre-wrap;
+}
+
+.delete-note-button {
+  background: transparent;
+  color: var(--danger);
+  padding: 5px 8px;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 600px) {
+  .update-log-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .update-note {
+    flex-direction: column;
+  }
+}
   </style>
 </head>
 
 <body>
   <header>
     <div class="header-content">
-      <div class="logo">Print<span>Ordre 1,0</span></div>
+      <div class="logo">Print<span>Ordre 1,2</span></div>
       <button class="primary-button" onclick="openOrderModal()">
         + Ny ordre
       </button>
@@ -417,8 +510,8 @@
       </div>
 
       <div class="stat-card">
-        <p>Samlet værdi</p>
-        <strong id="totalRevenue">0 kr.</strong>
+        <p>Samlet fortjeneste</p>
+<strong id="totalRevenue">0 kr.</strong>
       </div>
     </section>
 
@@ -456,10 +549,11 @@
             <th>Kunde</th>
             <th>Produkt</th>
             <th>Status</th>
-            <th>Deadline</th>
 <th>Oprettet</th>
 <th>Pris</th>
-            <th>Handlinger</th>
+<th>Printomkostning</th>
+<th>Fortjeneste</th>
+<th>Handlinger</th>
           </tr>
         </thead>
         <tbody id="ordersTable"></tbody>
@@ -493,14 +587,14 @@
           </div>
 
           <div class="form-group">
-            <label for="email">E-mail</label>
-            <input id="email" type="email" placeholder="kunde@email.dk" />
-          </div>
+  <label for="phone">Telefonnummer</label>
+  <input
+    id="phone"
+    type="tel"
+    placeholder="F.eks. 20 12 34 56"
+  />
+</div>
 
-          <div class="form-group">
-            <label for="deadline">Deadline</label>
-            <input id="deadline" type="date" />
-          </div>
           <div class="form-group">
   <label for="createdDate">Oprettet</label>
   <input id="createdDate" type="date" readonly />
@@ -532,6 +626,17 @@
             <label for="price">Pris i kroner</label>
             <input id="price" type="number" min="0" step="0.01" required placeholder="F.eks. 175" />
           </div>
+          <div class="form-group">
+  <label for="cost">Printomkostning i kroner</label>
+  <input
+    id="cost"
+    type="number"
+    min="0"
+    step="0.01"
+    value="0"
+    placeholder="F.eks. 45"
+  />
+</div>
 
           <div class="form-group">
             <label for="status">Status</label>
@@ -601,6 +706,7 @@
         month: "2-digit",
         year: "numeric"
       });
+      
     }
 
     function renderOrders() {
@@ -608,13 +714,11 @@
 
   // Tidligste deadline øverst
   const sortedOrders = [...orders].sort((a, b) => {
-    // Ordrer uden deadline placeres nederst
-    if (!a.deadline && !b.deadline) return 0;
-    if (!a.deadline) return 1;
-    if (!b.deadline) return -1;
+  const dateA = a.createdDate || "";
+  const dateB = b.createdDate || "";
 
-    return new Date(a.deadline) - new Date(b.deadline);
-  });
+  return dateA.localeCompare(dateB);
+});
 
   const emptyState = document.getElementById("emptyState");
   const search = document.getElementById("searchInput").value.toLowerCase();
@@ -646,9 +750,14 @@
           ${escapeHtml(order.status)}
         </span>
       </td>
-      <td>${formatDate(order.deadline)}</td>
-<td>${formatDate(order.createdDate)}</td>
+      <td>${formatDate(order.createdDate)}</td>
 <td>${formatCurrency(order.price)}</td>
+<td>${formatCurrency(order.cost || 0)}</td>
+<td class="${getProfitClass(order)}">
+  ${formatCurrency(
+    Number(order.price || 0) - Number(order.cost || 0)
+  )}
+</td>
       <td>
         <div class="actions">
           <button
@@ -665,10 +774,22 @@
           </select>
 
           <button
-            class="danger-button small-button"
-            onclick="deleteOrder(${order.id})">
-            Slet
-          </button>
+  class="danger-button small-button"
+  onclick="deleteOrder(${order.id})">
+  Slet
+</button>
+
+${
+  order.status === "Afsluttet"
+    ? `
+      <button
+        class="secondary-button small-button"
+        onclick="downloadReceipt(${order.id})">
+        Kvittering
+      </button>
+    `
+    : ""
+}
         </div>
       </td>
     `;
@@ -698,9 +819,10 @@
       ).length;
 
       const totalRevenue = orders.reduce(
-        (sum, order) => sum + Number(order.price || 0),
-        0
-      );
+  (sum, order) =>
+    sum + Number(order.price || 0) - Number(order.cost || 0),
+  0
+);
 
       document.getElementById("totalOrders").textContent = orders.length;
       document.getElementById("activeOrders").textContent = activeOrders;
@@ -722,13 +844,13 @@
       if (order) {
         document.getElementById("customer").value = order.customer;
         document.getElementById("product").value = order.product;
-        document.getElementById("email").value = order.email || "";
-        document.getElementById("deadline").value = order.deadline || "";
+        document.getElementById("phone").value = order.phone || "";
         document.getElementById("material").value = order.material || "PLA";
         document.getElementById("weight").value = order.weight || "";
         document.getElementById("printTime").value = order.printTime || "";
         document.getElementById("price").value = order.price || "";
-        document.getElementById("status").value = order.status || "Ny";
+document.getElementById("cost").value = order.cost || 0;
+document.getElementById("status").value = order.status || "Ny";
         document.getElementById("notes").value = order.notes || "";
       } else {
         document.getElementById("status").value = "Ny";
@@ -836,13 +958,13 @@ function changeStatus(orderId, newStatus) {
 
   customer: document.getElementById("customer").value.trim(),
         product: document.getElementById("product").value.trim(),
-        email: document.getElementById("email").value.trim(),
-        deadline: document.getElementById("deadline").value,
+        phone: document.getElementById("phone").value.trim(),
         material: document.getElementById("material").value,
         weight: Number(document.getElementById("weight").value || 0),
         printTime: Number(document.getElementById("printTime").value || 0),
         price: Number(document.getElementById("price").value || 0),
-        status: document.getElementById("status").value,
+cost: Number(document.getElementById("cost").value || 0),
+status: document.getElementById("status").value,
         notes: document.getElementById("notes").value.trim()
       };
 
@@ -863,9 +985,228 @@ function changeStatus(orderId, newStatus) {
       if (event.target === this) {
         closeOrderModal();
       }
-    });
+    });const updateNotes = [
+  {
+    date: "14. september 2026",
+    text: "Oprettet system til at holde styr på 3D-print ordrer."
+  },
+  {
+    date: "14. september 2026",
+    text: "Tilføjet mulighed for at ændre ordrestatus direkte fra ordreoversigten."
+  },
+  {
+    date: "14. september 2026",
+    text: "Tilføjet deadline, oprettelsesdato og beregning af samlet fortjeneste."
+  }
+];
+
+function renderUpdateNotes() {
+  const list = document.getElementById("updateNotesList");
+
+  if (updateNotes.length === 0) {
+    list.innerHTML = `
+      <p style="color: var(--muted);">
+        Der er endnu ikke skrevet nogen opdateringer.
+      </p>
+    `;
+    return;
+  }
+
+  list.innerHTML = updateNotes.map(note => `
+    <div class="update-note">
+      <div class="update-note-content">
+        <div class="update-note-date">
+          ${escapeHtml(note.date)}
+        </div>
+
+        <div class="update-note-text">
+          ${escapeHtml(note.text)}
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+function getProfitClass(order) {
+  const profit =
+    Number(order.price || 0) - Number(order.cost || 0);
+
+  if (profit < 0) {
+    return "negative-profit";
+  }
+
+  return "positive-profit";
+}
+function downloadReceipt(orderId) {
+  const order = orders.find(order => order.id === orderId);
+
+  if (!order) {
+    alert("Ordren blev ikke fundet.");
+    return;
+  }
+
+  if (order.status !== "Afsluttet") {
+    alert("Der kan kun downloades kvittering for afsluttede ordrer.");
+    return;
+  }
+
+  const price = Number(order.price || 0);
+  const cost = Number(order.cost || 0);
+
+  const receiptHtml = `
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <title>Kvittering ordre #${order.id}</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 20px;
+      color: #17202a;
+    }
+
+    h1 {
+      color: #5b4df5;
+      margin-bottom: 5px;
+    }
+
+    .date {
+      color: #6b7280;
+      margin-bottom: 30px;
+    }
+
+    .details {
+      border-top: 1px solid #ddd;
+      border-bottom: 1px solid #ddd;
+      padding: 18px 0;
+      margin: 20px 0;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      padding: 7px 0;
+    }
+
+    .total {
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-top: 2px solid #17202a;
+      margin-top: 15px;
+      padding-top: 15px;
+    }
+
+    .footer {
+      margin-top: 40px;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>3D-print kvittering</h1>
+  <div class="date">
+    Ordre #${order.id} · ${escapeHtml(order.createdDate || "")}
+  </div>
+
+  <div class="details">
+    <div class="row">
+      <strong>Kunde</strong>
+      <span>${escapeHtml(order.customer)}</span>
+    </div>
+
+    <div class="row">
+      <strong>Telefonnummer</strong>
+<span>${escapeHtml(order.phone || "—")}</span>
+    </div>
+
+    <div class="row">
+      <strong>Produkt</strong>
+      <span>${escapeHtml(order.product)}</span>
+    </div>
+
+    <div class="row">
+      <strong>Materiale</strong>
+      <span>${escapeHtml(order.material || "—")}</span>
+    </div>
+
+    <div class="row">
+      <strong>Status</strong>
+      <span>${escapeHtml(order.status)}</span>
+    </div>
+  </div>
+
+  <div class="row">
+    <span>Pris</span>
+    <span>${formatCurrency(price)}</span>
+  </div>
+
+  <div class="row total">
+  <span>Total</span>
+  <span>${formatCurrency(price)}</span>
+</div>
+
+  ${
+    order.notes
+      ? `
+        <div class="details">
+          <strong>Noter</strong>
+          <p>${escapeHtml(order.notes)}</p>
+        </div>
+      `
+      : ""
+  }
+
+  <div class="footer">
+    Tak for din ordre.
+  </div>
+</body>
+</html>
+  `;
+
+  const blob = new Blob([receiptHtml], {
+    type: "text/html;charset=utf-8"
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = `kvittering-ordre-${order.id}.html`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+}
+
+
+
 
     renderOrders();
+    renderUpdateNotes();
   </script>
 </body>
 </html>
+</main>
+
+<section class="update-log">
+  <div class="update-log-header">
+    <div>
+      <h2>Opdatelog</h2>
+      <p>Update 1.2 🚀
+Jeg har lavet så man kan se hvilken pris kunden betaler.hvad print omkostningen er og hvad fortjenelse er under ordre.
+
+jeg har også lavet så man kan udskrive en kvittering til kunden hvis de vil have en
+
+Jeg opdatere ofte siden så det kan være der kommer lidt rod
+.</p>
+    </div>
+  </div>
+
+  <div id="updateNotesList" class="update-notes-list"></div>
+</section>

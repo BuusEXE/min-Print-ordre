@@ -747,6 +747,7 @@
       <div class="stat-card"><p>Alle ordrer</p><strong id="totalOrders">0</strong></div>
       <div class="stat-card"><p>Aktive ordrer</p><strong id="activeOrders">0</strong></div>
       <div class="stat-card"><p>Klar til levering</p><strong id="readyOrders">0</strong></div>
+      <div class="stat-card delayed"><p>Forsinkede</p><strong id="delayedOrders">0</strong></div>
       <div class="stat-card"><p>Samlet fortjeneste</p><strong id="totalRevenue">0 kr.</strong></div>
     </section>
 
@@ -763,6 +764,10 @@
           <option value="Klar">Klar</option>
           <option value="Afsluttet">Afsluttet</option>
         </select>
+        <label class="checkbox-wrap">
+          <input id="onlyDelayed" type="checkbox" onchange="onFilterChange()" />
+          Vis kun forsinkede
+        </label>
       </div>
       <div class="toolbar-actions">
         <button class="secondary-button" onclick="document.getElementById('csvImportInput').click()">Importér CSV</button>
@@ -781,6 +786,7 @@
             <th>Produkt</th>
             <th>Status</th>
             <th class="sortable" data-key="createdDate">Oprettet <span class="sort-indicator">▲▼</span></th>
+            <th class="sortable" data-key="deliveryDate">Leveringsdato <span class="sort-indicator">▲▼</span></th>
             <th class="sortable" data-key="price">Pris <span class="sort-indicator">▲▼</span></th>
             <th>Betaling</th>
             <th>Printomkostning</th>
@@ -845,6 +851,11 @@ Jeg opdatere ofte siden. Hvis du har ideer eller feedback kan du altid sende en 
           <div class="form-group">
             <label for="createdDate">Oprettet</label>
             <input id="createdDate" type="date" readonly />
+          </div>
+
+          <div class="form-group">
+            <label for="deliveryDate">Leveringsdato</label>
+            <input id="deliveryDate" type="date" />
           </div>
 
           <div class="form-group full">
@@ -1235,6 +1246,11 @@ Jeg opdatere ofte siden. Hvis du har ideer eller feedback kan du altid sende en 
         .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
         .replaceAll('"',"&quot;").replaceAll("'","&#039;");
     }
+    function isOverdue(order) {
+      if (!order.deliveryDate) return false;
+      if (order.status === "Afsluttet") return false;
+      return order.deliveryDate < getTodayAsInputDate();
+    }
     function profitOf(order) {
       return Number(order.price || 0) - Number(order.cost || 0);
     }
@@ -1482,6 +1498,7 @@ Jeg opdatere ofte siden. Hvis du har ideer eller feedback kan du altid sende en 
     function getFilteredOrders() {
       const search = document.getElementById("searchInput").value.toLowerCase();
       const selectedStatus = document.getElementById("statusFilter").value;
+      const onlyDelayed = document.getElementById("onlyDelayed").checked;
 
       return orders.filter(o => {
         const matchesSearch =
@@ -1489,7 +1506,8 @@ Jeg opdatere ofte siden. Hvis du har ideer eller feedback kan du altid sende en 
           (o.product || "").toLowerCase().includes(search) ||
           String(o.id).includes(search);
         const matchesStatus = !selectedStatus || o.status === selectedStatus;
-        return matchesSearch && matchesStatus;
+        const matchesDelayed = !onlyDelayed || isOverdue(o);
+        return matchesSearch && matchesStatus && matchesDelayed;
       });
     }
 
@@ -1507,6 +1525,7 @@ Jeg opdatere ofte siden. Hvis du har ideer eller feedback kan du altid sende en 
       tbody.innerHTML = "";
       pageItems.forEach(order => {
         const row = document.createElement("tr");
+        if (isOverdue(order)) row.classList.add("overdue");
 
         const costBadgeHtml = order.costManual
           ? `<span class="cost-badge manual" title="Manuelt overskrevet">Manuel</span>`
@@ -1522,6 +1541,10 @@ Jeg opdatere ofte siden. Hvis du har ideer eller feedback kan du altid sende en 
             </span>
           </td>
           <td>${formatDate(order.createdDate)}</td>
+          <td>
+            ${formatDate(order.deliveryDate)}
+            ${isOverdue(order) ? '<span class="overdue-badge">Forsinket</span>' : ''}
+          </td>
           <td>${formatCurrency(order.price)}</td>
           <td>
             <span class="payment-status ${order.paymentStatus === "Betalt" ? "payment-paid" : "payment-unpaid"}">
@@ -1586,11 +1609,13 @@ Jeg opdatere ofte siden. Hvis du har ideer eller feedback kan du altid sende en 
       const activeStatuses = ["Ny","Til tilbud","Godkendt","Under print","Efterbehandling"];
       const activeOrders = orders.filter(o => activeStatuses.includes(o.status)).length;
       const readyOrders = orders.filter(o => o.status === "Klar").length;
+      const delayedCount = orders.filter(o => isOverdue(o)).length;
       const totalRevenue = orders.reduce((s, o) => s + profitOf(o), 0);
 
       document.getElementById("totalOrders").textContent = orders.length;
       document.getElementById("activeOrders").textContent = activeOrders;
       document.getElementById("readyOrders").textContent = readyOrders;
+      document.getElementById("delayedOrders").textContent = delayedCount;
       document.getElementById("totalRevenue").textContent = formatCurrency(totalRevenue);
     }
 
@@ -1696,6 +1721,7 @@ Jeg opdatere ofte siden. Hvis du har ideer eller feedback kan du altid sende en 
         document.getElementById("customer").value = order.customer || "";
         document.getElementById("product").value = order.product || "";
         document.getElementById("phone").value = order.phone || "";
+        document.getElementById("deliveryDate").value = order.deliveryDate || "";
         document.getElementById("printTime").value = order.printTime ?? "";
         document.getElementById("price").value = order.price ?? "";
         document.getElementById("cost").value = order.cost ?? 0;
